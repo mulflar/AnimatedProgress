@@ -26,6 +26,13 @@ namespace JimBobBennett.AnimatedProgress
            typeof(ProgressBar),
            default(string),
            BindingMode.OneWay);
+        
+        public static BindableProperty AnimatedProgressDecreaseProperty =
+          BindableProperty.CreateAttached("AnimatedProgressDecrease",
+          typeof(bool),
+          typeof(ProgressBar),
+          default(bool),
+          BindingMode.OneWay);
 
         public static double GetAnimatedProgress(BindableObject target) => (double)target.GetValue(AnimatedProgressProperty);
         public static void SetAnimatedProgress(BindableObject target, double value) => target.SetValue(AnimatedProgressProperty, value);
@@ -36,14 +43,23 @@ namespace JimBobBennett.AnimatedProgress
         public static string GetAnimatedProgressEasing(BindableObject target) => (string)target.GetValue(AnimatedProgressEasingProperty);
         public static void SetAnimatedProgressEasing(BindableObject target, string value) => target.SetValue(AnimatedProgressEasingProperty, value);
 
+        public static bool GetAnimatedProgressDecrease(BindableObject target) => (bool)target.GetValue(AnimatedProgressDecreaseProperty);
+        public static void SetAnimatedProgressDecrease(BindableObject target, bool value) => target.SetValue(AnimatedProgressDecreaseProperty, value); 
+        
         private static void ProgressBarProgressChanged(ProgressBar progressBar, double progress)
         {
             ViewExtensions.CancelAnimations(progressBar);
 
             var animationTime = GetAnimatedProgressAnimationTime(progressBar);
             var easingName = GetAnimatedProgressEasing(progressBar);
+            var allowDescreasAnimation = GetAnimatedProgressDecrease(progressBar);
 
-            progressBar.ProgressTo(progress, Convert.ToUInt32(Math.Max(0, animationTime)), GetEasing(easingName));
+            if (!allowDescreasAnimation && progress < progressBar.Progress)
+                progressBar.Progress = progress;
+            else
+                progressBar.ProgressTo(progress, Convert.ToUInt32(Math.Max(0, animationTime)), GetEasing(easingName));
+            
+            
         }
 
         private static Easing GetEasing(string easingName)
